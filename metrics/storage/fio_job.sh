@@ -36,8 +36,10 @@ FIO_TEST_NAME="io_test"
 NUM_JOBS="1"
 OPERATION="randread"
 TEST_NAME="storage fio test"
-EXTRA_ARGS=""
-TEST_TIME="30"
+EXTRA_ARGS="--ramp_time=60 --time_based --invalidate=1"
+IODEPTH="1"
+DIRECT="0"
+TEST_TIME="300"
 
 # This docker image includes FIO tool.
 FIO_IMAGE="clusterhq/fio-tool"
@@ -91,8 +93,9 @@ function create_fio_prep_job()
 		--filename="$FILE_NAME" \
 		--bs="$BLOCK_SIZE" \
 		--size="$FILE_SIZE" \
-		--readwrite="$OPERATION" --max-jobs=$NUM_JOBS \
+		--readwrite="$OPERATION" \ # --max-jobs=$NUM_JOBS \
 		--runtime=1 \
+		--iodepth="$IODEPTH" \
 		${EXTRA_ARGS}
 EOF
 )"
@@ -112,8 +115,9 @@ function create_fio_run_job()
 		--filename="$FILE_NAME" \
 		--bs="$BLOCK_SIZE" \
 		--size="$FILE_SIZE" \
-		--readwrite="$OPERATION" --max-jobs=$NUM_JOBS \
+		--readwrite="$OPERATION" \ #--max-jobs=$NUM_JOBS \
 		--runtime="$TEST_TIME" \
+		--iodepth="$IODEPTH" \
 		${EXTRA_ARGS}
 EOF
 )"
@@ -153,7 +157,7 @@ function main()
 {
 	cmds=("bc" "awk" "smem")
 	local OPTIND
-	while getopts "b:e:hs:o:n:r:t:T:x:" opt;do
+	while getopts "b:e:hs:o:n:r:t:T:x:i:d:" opt;do
 		case ${opt} in
 		b)
 		    BLOCK_SIZE="${OPTARG}"
@@ -185,6 +189,12 @@ function main()
 		    ;;
 		x)
 		    EXTRA_ARGS="${OPTARG}"
+		    ;;
+		i)
+		    IODEPTH="${OPTARG}"
+		    ;;
+		d)
+		    DIRECT=1
 		    ;;
 		esac
 	done
